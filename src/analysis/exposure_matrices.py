@@ -9,6 +9,7 @@ root_path = Path().resolve().parents[1]
 enrollment_2022_path = root_path / "data" / "enrollment_2022"
 map_path = root_path / "data" / "NYS_Civil_Boundaries"
 image_path = root_path / "images"
+output_path = root_path / "outputs"
 
 
 def load_data(year):
@@ -52,11 +53,20 @@ def get_exposure(data, county_name, pop_1, pop_2, renormalize=True):
             ]
         case _:
             county_data = data[data["COUNTY_NAME"] == county_name]
-    p_A = county_data[pop_1] / county_data[pop_1].sum()
+    pop_1_tot = county_data[pop_1].sum()
+    if pop_1_tot == 0:
+        p_A = county_data[pop_1]
+    else:
+        p_A = county_data[pop_1] / pop_1_tot
+
     prop_B = county_data[pop_2] / county_data["K12"]
     score = (prop_B * p_A).sum()
     if renormalize:
-        score = score * (county_data["K12"].sum() / county_data[pop_2].sum())
+        pop_2_tot = county_data[pop_2].sum()
+        if pop_2_tot == 0:
+            score = score * (county_data["K12"].sum())
+        else:
+            score = score * (county_data["K12"].sum() / pop_2_tot)
     return score
 
 
